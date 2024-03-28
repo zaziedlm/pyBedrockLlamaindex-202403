@@ -1,9 +1,6 @@
 # vertual env
 /.venv/
 
-# input PDF
-/data/
-
 # db_data
 /storage/
 
