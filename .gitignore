@@ -1,0 +1,14 @@
+# vertual env
+/.venv/
+
+# input PDF
+/data/
+
+# db_data
+/storage/
+
+# env-seclet(AWS)
+/.env
+
+# local-env
+/poetry.lock
