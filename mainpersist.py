@@ -6,14 +6,14 @@
 
 import boto3
 import os
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
-load_dotenv()
+#load_dotenv()
 
 # Setup bedrock
 bedrock_runtime = boto3.client(
     service_name="bedrock-runtime",
-    region_name=os.environ["AWS_DEFAULT_REGION"],
+    # region_name=os.environ["AWS_DEFAULT_REGION"],
 )
 
 #####################################################################
