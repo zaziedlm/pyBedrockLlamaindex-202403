@@ -20,8 +20,8 @@ bedrock_runtime = boto3.client(
 # LLM - Amazon Bedrock LLM using LangChain
 #####################################################################
 
-from llama_index.llms import LangChainLLM
-from langchain.llms import Bedrock
+from llama_index.llms.langchain import LangChainLLM
+from llama_index.llms.bedrock import Bedrock
 
 model_id = "anthropic.claude-v2"
 model_kwargs =  { 
@@ -34,47 +34,63 @@ model_kwargs =  {
 
 llm = Bedrock(
     client=bedrock_runtime,
-    model_id=model_id,
-    model_kwargs=model_kwargs
+    model=model_id,
+    #kwargs=model_kwargs,
+    # aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+    # aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    # #aws_session_token="AWS Session Token to use",
+    # region_name=os.environ["AWS_DEFAULT_REGION"],
 )
 
 #####################################################################
 # Embedding Model - Amazon Titan Embeddings Model using LangChain
 #####################################################################
 
-from llama_index import LangchainEmbedding, StorageContext, load_index_from_storage
-from langchain.embeddings import BedrockEmbeddings
+from llama_index.embeddings.langchain import LangchainEmbedding
+from llama_index.core import StorageContext, load_index_from_storage
+from llama_index.embeddings.bedrock import BedrockEmbedding
 
 # create embeddings
-bedrock_embedding = BedrockEmbeddings(
+embed_model = BedrockEmbedding(
     client=bedrock_runtime,
-    model_id="amazon.titan-embed-text-v1",
+    model="amazon.titan-embed-text-v1",
+    #model=Models.TITAN_ENBEDDING,  # default?
+    # aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+    # aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    # # #aws_session_token="AWS Session Token to use",
+    # region_name=os.environ["AWS_DEFAULT_REGION"],
 )
-
-# load in Bedrock embedding model from langchain
-embed_model = LangchainEmbedding(bedrock_embedding)
 
 #####################################################################
 # Service Context
 #####################################################################
 
-from llama_index import ServiceContext, set_global_service_context
+# from llama_index import ServiceContext, set_global_service_context
 
-service_context = ServiceContext.from_defaults(
-  llm=llm,
-  embed_model=embed_model,
-  system_prompt="You are an AI assistant answering questions."
-)
+# service_context = ServiceContext.from_defaults(
+#   llm=llm,
+#   embed_model=embed_model,
+#   system_prompt="You are an AI assistant answering questions."
+# )
 
-set_global_service_context(service_context)
+# set_global_service_context(service_context)
 
+# ServiceContext was deprecated, globally in the Settings
+from llama_index.core import Settings
+from llama_index.core.node_parser import SentenceSplitter
+
+Settings.llm = llm
+Settings.embed_model = embed_model
+Settings.node_parser = SentenceSplitter(chunk_size=256, chunk_overlap=20)
+Settings.num_output = 256
+Settings.context_window = 3900
 #####################################################################
 # Streamlit
 #####################################################################
 
 import streamlit as st
-from llama_index import SimpleDirectoryReader
-from llama_index import VectorStoreIndex
+from llama_index.core import SimpleDirectoryReader
+from llama_index.core import VectorStoreIndex
 
 st.set_page_config(
   page_title="LlamaIndex Q&A over you data 📂",
@@ -105,7 +121,7 @@ def load_data():
 # index=load_data()
 
 storage_context = StorageContext.from_defaults(persist_dir="./storage/")
-index = load_index_from_storage(storage_context, service_context=service_context)
+index = load_index_from_storage(storage_context)
 
 # Create Query Engine
 query_engine=index.as_query_engine(similarity_top_k=3)
